@@ -1,17 +1,19 @@
 import taichi as ti
-from vector import Point
-from hittable import set_face_normal
+from hittable import set_face_normal, HitRecord
 
 
 @ti.data_oriented
 class Sphere:
-    def __init__(self, center, radius):
+    def __init__(self, name, center, radius, material):
+        self.name = name
         self.center = center
         self.radius = radius
+        self.material = material
 
     @ti.func
-    def hit(self, ray, t_min, t_max, hit_record: ti.template()):
+    def hit(self, ray, t_min, t_max):
         result = False
+        hit_record = HitRecord()
         oc = ray.origin - self.center
         a = ray.direction.norm_sqr()
         half_b = oc.dot(ray.direction)
@@ -29,6 +31,6 @@ class Sphere:
                 hit_record.t = root
                 hit_record.point = ray.at(hit_record.t)
                 outward_normal = (hit_record.point - self.center) / self.radius
-                set_face_normal(ray, outward_normal, hit_record)
+                hit_record.front_face, hit_record.normal = set_face_normal(ray, outward_normal)
 
-        return result
+        return hit_record, result
