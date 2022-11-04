@@ -59,7 +59,7 @@ def render():
         ray = camera.get_ray(u, v)
         pixels[i, j] += ray_color(ray, world)
 
-
+world.commit()
 gui = ti.GUI(name='Render', res=(image_width, image_height))
 
 # render()

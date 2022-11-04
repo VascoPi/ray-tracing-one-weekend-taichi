@@ -16,9 +16,10 @@ def random_scene():
     world.objects.append(Sphere(center=Point(4.0, 1.0, 0.0), radius=1.0, material=material3))
 
     for a in range(-11, 11):
-        for b in range(-1, 1):
+        for b in range(-11, 11):
             material_type = random.random()
-            center = Point(a + 0.9*random.random())
+            center = Point(a + 0.9 * random.random(), 0.2,
+                           b + 0.9 * random.random())
             if center - Point(4.0, 0.2, 0.0).norm() > 0.9:
                 if material_type < 0.8:
                     material = Lambert(Color(random.random(), random.random(), random.random()))
@@ -40,21 +41,35 @@ class HittableList:
     def __init__(self):
         self.objects = []
 
+    def commit(self):
+        ''' Save the sphere data and material info so we can loop over these.'''
+        self.n = len(self.objects)
+        self.sphere_infos = SphereInfo.field(shape=(self.n,))
+        self.mat_infos = MaterialData.field(shape=(self.n,))
+
+        for i, sphere in enumerate(self.objects):
+            sphere_info, mat_info = sphere.get_info()
+            self.sphere_infos[i] = sphere_info
+            self.mat_infos[i] = mat_info
+
     @ti.func
-    def hit(self, ray, t_min, t_max):
-        mat_info = MaterialData()
-        hit_record = HitRecord()
+    def hit(self, r, t_min, t_max):
         hit_anything = False
         closest_so_far = t_max
-        for i in ti.static(range(len(self.objects))):
-            is_hit, temp_hit_record = self.objects[i].hit(self.objects[i].get_info()[0], ray, t_min, closest_so_far)
-            if is_hit:
-                hit_anything = True
-                closest_so_far = temp_hit_record.t
-                mat_info = self.objects[i].material.mat_info
-                hit_record = temp_hit_record
+        rec = HitRecord()
+        mat_info = MaterialData()
 
-        return hit_anything, hit_record, mat_info
+        for i in range(self.n):
+            hit, temp_rec = Sphere.hit(self.sphere_infos[i], r, t_min, closest_so_far)
+            if hit:
+                hit_anything = True
+                closest_so_far = temp_rec.t
+                rec = temp_rec
+                # we return the material info not the material because
+                # taichi doesn't yet deal with assigning object pointers
+                mat_info = self.mat_infos[i]
+
+        return hit_anything, rec, mat_info
 
 
 SphereInfo = ti.types.struct(center=Point, radius=ti.f32)
