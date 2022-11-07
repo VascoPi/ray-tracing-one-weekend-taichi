@@ -42,42 +42,42 @@ class MaterialData:
 @ti.data_oriented
 class Metal:
     def __init__(self, color, roughness):
-        self.material_data = MaterialData(color=color, roughness=roughness, ior=1.0, mat_type=METAL)
+        self.mat_info = MaterialData(color=color, roughness=roughness, ior=1.0, mat_type=METAL)
 
     @staticmethod
     @ti.func
-    def scatter(material_data, in_direction, hit_record):
+    def scatter(mat_info, in_direction, hit_record):
         out_direction = reflect(in_direction.normalized(),
-                                hit_record.normal) + material_data.roughness * random_in_unit_sphere()
+                                hit_record.normal) + mat_info.roughness * random_in_unit_sphere()
         reflected = out_direction.dot(hit_record.normal) > 0.0
-        return reflected, Ray(origin=hit_record.point, direction=out_direction), material_data.color
+        return reflected, Ray(origin=hit_record.point, direction=out_direction), mat_info.color
 
 
 @ti.data_oriented
 class Lambert:
     def __init__(self, color):
-        self.material_data = MaterialData(color=color, roughness=0.0, ior=1.0, mat_type=LAMBERT)
+        self.mat_info = MaterialData(color=color, roughness=0.0, ior=1.0, mat_type=LAMBERT)
 
     @staticmethod
     @ti.func
-    def scatter(material_data, in_direction, rec):
+    def scatter(mat_info, in_direction, rec):
         out_direction = rec.normal + random_in_unit_sphere()
 
         if near_zero(out_direction):
             vec = rec.normal
 
-        return True, Ray(origin=rec.point, direction=out_direction), material_data.color
+        return True, Ray(origin=rec.point, direction=out_direction), mat_info.color
 
 
 @ti.data_oriented
 class Dielectric:
     def __init__(self, ior):
-        self.material_data = MaterialData(color=Color(1.0), roughness=0.0, ior=ior, mat_type=DIELECTRIC)
+        self.mat_info = MaterialData(color=Color(1.0), roughness=0.0, ior=ior, mat_type=DIELECTRIC)
 
     @staticmethod
     @ti.func
-    def scatter(material_data, in_direction, rec):
-        refraction_ratio = 1.0 / material_data.ior if rec.front_face else material_data.ior
+    def scatter(mat_info, in_direction, rec):
+        refraction_ratio = 1.0 / mat_info.ior if rec.front_face else mat_info.ior
         unit_dir = in_direction.normalized()
         cos_theta = min(-unit_dir.dot(rec.normal), 1.0)
         sin_theta = ti.sqrt(1.0 - cos_theta * cos_theta)
@@ -90,19 +90,19 @@ class Dielectric:
         else:
             out_direction = refract(unit_dir, rec.normal, refraction_ratio)
 
-        return True, Ray(origin=rec.point, direction=out_direction), material_data.color
+        return True, Ray(origin=rec.point, direction=out_direction), mat_info.color
 
 
 @ti.func
-def scatter(material_data, in_direction, hit_record):
+def scatter(mat_info, in_direction, hit_record):
     hit = False
     scattered = Ray(origin=Point(0.0), direction=Vector(0.0))
     attenuation = Color(0.0, 0.0, 0.0)
-    if material_data.mat_type == LAMBERT:
-        hit, scattered, attenuation = Lambert.scatter(material_data, in_direction, hit_record)
-    elif material_data.mat_type == METAL:
-        hit, scattered, attenuation = Metal.scatter(material_data, in_direction, hit_record)
+    if mat_info.mat_type == LAMBERT:
+        hit, scattered, attenuation = Lambert.scatter(mat_info, in_direction, hit_record)
+    elif mat_info.mat_type == METAL:
+        hit, scattered, attenuation = Metal.scatter(mat_info, in_direction, hit_record)
     else:
-        hit, scattered, attenuation = Dielectric.scatter(material_data, in_direction, hit_record)
+        hit, scattered, attenuation = Dielectric.scatter(mat_info, in_direction, hit_record)
 
     return hit, scattered, attenuation
