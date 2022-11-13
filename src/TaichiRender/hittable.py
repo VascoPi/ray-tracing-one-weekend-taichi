@@ -1,6 +1,6 @@
 import taichi as ti
-from vector import Point, Color
-from material import MaterialData, Dielectric, Metal, Lambert
+from .vector import Point, Color
+from .material import MaterialData, Dielectric, Metal, Lambert
 import random
 
 
@@ -18,20 +18,24 @@ def random_scene():
     for a in range(-11, 11):
         for b in range(-11, 11):
             material_type = random.random()
-            center = Point(a + 0.9 * random.random(), 0.2,
-                           b + 0.9 * random.random())
+            center = Point(a + 0.9 * random.random(), 0.2, b + 0.9 * random.random())
             if center - Point(4.0, 0.2, 0.0).norm() > 0.9:
                 if material_type < 0.8:
                     material = Lambert(Color(random.random(), random.random(), random.random()))
                 elif material_type < 0.95:
-                    material = Metal(Color(random.random(), random.random(), random.random()) * 0.5 + 0.5, random.random() * 0.5)
+                    material = Metal(
+                        Color(random.random(), random.random(), random.random()) * 0.5 + 0.5,
+                        random.random() * 0.5,
+                    )
                 else:
                     material = Dielectric(1.5)
 
             world.objects.append(Sphere(center=center, radius=0.2, material=material))
 
     material_ground = Lambert(Color(0.5, 0.5, 0.5))
-    world.objects.append(Sphere(center=Point(0.0, -1000.0, 0.0), radius=1000.0, material=material_ground))
+    world.objects.append(
+        Sphere(center=Point(0.0, -1000.0, 0.0), radius=1000.0, material=material_ground)
+    )
 
     return world
 
@@ -42,7 +46,7 @@ class HittableList:
         self.objects = []
 
     def commit(self):
-        ''' Save the sphere data and material info so we can loop over these.'''
+        """Save the sphere data and material info so we can loop over these."""
         self.n = len(self.objects)
         self.sphere_infos = SphereInfo.field(shape=(self.n,))
         self.mat_infos = MaterialData.field(shape=(self.n,))
@@ -93,8 +97,8 @@ class Sphere:
         oc = ray.origin - self.center
         a = ray.direction.norm_sqr()
         half_b = oc.dot(ray.direction)
-        c = oc.norm_sqr() - self.radius ** 2
-        discriminant = half_b ** 2 - a * c
+        c = oc.norm_sqr() - self.radius**2
+        discriminant = half_b**2 - a * c
         if discriminant >= 0.0:
             sqrtd = ti.sqrt(discriminant)
             root = (-half_b - sqrtd) / a
@@ -124,4 +128,4 @@ class HitRecord:
 @ti.func
 def set_face_normal(ray, outward_normal, hit_record: ti.template()):
     hit_record.front_face = ray.direction.dot(outward_normal) < 0
-    hit_record.normal = outward_normal if hit_record.front_face else -outward_normal
+    hit_record.normal = ti.select(hit_record.front_face, outward_normal, -outward_normal)
