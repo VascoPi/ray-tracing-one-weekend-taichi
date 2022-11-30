@@ -77,7 +77,6 @@ world.commit()
 # gui.show("output.png")
 
 
-
 window = ti.ui.Window(name="Render", res=(image_width, image_height))
 gui = window.get_gui()
 canvas = window.get_canvas()
@@ -107,10 +106,10 @@ while window.running:
         focus_distance,
     )
     # with gui.sub_window(name="Parameters", x=0.0, y=0.0, width=0.3, height=0.3) as g:
-        # level = g.slider_int(
-        #     text="BVH Level", old_value=old_value, maximum=len(world.bvh_nodes) * 24, minimum=1
-        # )
-        # old_value = level
+    # level = g.slider_int(
+    #     text="BVH Level", old_value=old_value, maximum=len(world.bvh_nodes) * 24, minimum=1
+    # )
+    # old_value = level
 
     scene.set_camera(cam)
     # n = world.vertex_bvh.to_numpy()[:level]
