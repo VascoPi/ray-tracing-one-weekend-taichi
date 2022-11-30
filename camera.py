@@ -33,6 +33,7 @@ class Camera:
         self.lower_left_corner = Point(self.origin - self.horizontal / 2
                                        - self.vertical / 2 - self.focus_distance * w)
 
+
     @ti.func
     def get_ray(self, s, t):
         rd = self.lens_radius * random_in_unit_disk()
