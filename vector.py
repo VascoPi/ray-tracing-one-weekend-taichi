@@ -7,6 +7,9 @@ Color = Vector
 Point = Vector
 
 
+def get_bounding_box(obj):
+    return (obj.center - Vector(obj.radius)), (obj.center + Vector(obj.radius))
+
 @ti.func
 def random_in_unit_sphere():
     return taichi_glsl.randgen.randUnit3D()

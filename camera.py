@@ -30,11 +30,15 @@ class Camera:
 
         self.horizontal = self.focus_distance * viewport_width * self.u
         self.vertical = self.focus_distance * viewport_height * self.v
-        self.lower_left_corner = Point(self.origin - self.horizontal / 2
-                                       - self.vertical / 2 - self.focus_distance * w)
+        self.lower_left_corner = Point(
+            self.origin - self.horizontal / 2 - self.vertical / 2 - self.focus_distance * w
+        )
 
     @ti.func
     def get_ray(self, s, t):
         rd = self.lens_radius * random_in_unit_disk()
         offset = self.u * rd.x + self.v * rd.y
-        return Ray(self.origin + offset, self.lower_left_corner + s * self.horizontal + t * self.vertical - self.origin - offset)
+        return Ray(
+            self.origin + offset,
+            self.lower_left_corner + s * self.horizontal + t * self.vertical - self.origin - offset,
+        )
